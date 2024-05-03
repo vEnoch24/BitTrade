@@ -1,0 +1,110 @@
+﻿@page "/"
+@using BitTrade.DataAccess;
+@using BitTrade.Dto;
+@using BitTrade.Methods;
+@using BitTrade.Model;
+@using BitTrade.RequestPayload;
+@using BitTrade.Services;
+@using Radzen.Blazor;
+@using Microsoft.JSInterop;
+
+
+@inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
+@inject DialogService ds
+@inject NotificationService NotificationService
+@inject ITransactionService _ts;
+@inject CurrencyInfoService currencyInfoService;
+@inject TooltipService tooltipService;
+@inject BitCoinConverter btcConverter;
+@inject IJSRuntime jSRuntime;
+
+
+<RadzenStack Orientation=Orientation.Vertical>
+    <RadzenRow JustifyContent=JustifyContent.Left AlignItems=AlignItems.Normal Gap="1rem" class="">
+        <RadzenColumn Size="6" class="">
+            <RadzenCard>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" Class="rz-p-4">
+                    <RadzenCard Style="background-color: #FCA656; border-radius: 50%">
+                        <RadzenIcon Icon="currency_bitcoin" Style="font-size: 200px; color: white; " />
+                    </RadzenCard> 
+                    <RadzenStack Gap="0">
+                        <RadzenText TextStyle="TextStyle.H1" class="rz-display-flex rz-mt-2 rz-my-0"><b>Balance</b></RadzenText>
+                        <RadzenCard class="rz-shadow-10" Style="background-color">
+                            <RadzenText TextStyle="TextStyle.DisplayH4" Style="margin-left: 12px"><strong>0.000</strong></RadzenText>
+                        </RadzenCard>
+                        
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+      
+        <RadzenColumn Size="4">
+
+        </RadzenColumn>
+
+        <RadzenColumn Size="2" class="">
+            <RadzenCard Style="">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" Class="rz-p-4">
+                    <RadzenProfileMenu Style="border:hidden;">
+                        <Template>
+                            <RadzenGravatar Style="background-size: 3rem" Email="ogunrindeenoch1@gmail.com">
+                            </RadzenGravatar>
+                        </Template>
+                        <ChildContent>
+                            <RadzenProfileMenuItem Text="Buttons" Path="buttons" Icon="account_circle"></RadzenProfileMenuItem>
+                            <RadzenProfileMenuItem Text="Menu" Path="menu" Icon="line_weight"></RadzenProfileMenuItem>
+                            <RadzenProfileMenuItem Text="FileInput" Path="fileinput" Icon="attach_file"></RadzenProfileMenuItem>
+                            <RadzenProfileMenuItem Text="Dialog" Path="dialog" Icon="perm_media"></RadzenProfileMenuItem>
+                            <RadzenProfileMenuItem Text="Notification" Path="notification" Icon="announcement"></RadzenProfileMenuItem>
+                        </ChildContent>
+                    </RadzenProfileMenu>
+                    <RadzenStack Gap="0">
+                        <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Employee</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body1"><b>Michael</b></RadzenText>
+
+                    </RadzenStack>
+                </RadzenStack>
+           </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow JustifyContent=JustifyContent.Right AlignItems=AlignItems.End Gap="1rem" class="rz-border-info-light">
+       <RadzenCard>
+            @*<RadzenChart>
+                <RadzenAreaSeries Smooth=true Data="@transactionData" CategoryProperty="Date" Title="2019" ValueProperty="Revenue" RenderingOrder="1">
+                    <RadzenSeriesDataLabels Visible="@showDataLabels" />
+                </RadzenAreaSeries>
+                <RadzenCategoryAxis Padding="20" Formatter="@FormatAsMonth" />
+                <RadzenValueAxis Formatter="@FormatAsUSD">
+                    <RadzenGridLines Visible="true" />
+                    <RadzenAxisTitle Text="Revenue in USD" />
+                </RadzenValueAxis>
+            </RadzenChart>*@
+       </RadzenCard>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+
+    List<TransactionChartDataDto> transactionData;
+    List<TransactionModel> transactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await base.OnInitializedAsync();
+        //transactions = await _ts.GetAllTransactions();
+
+        //foreach (var transaction in transactions)
+        //{
+        //    TransactionChartDataDto newData = new TransactionChartDataDto
+        //        {
+        //            Amount = transaction.Amount,
+        //            BitcoinAmount = transaction.BitcoinAmount,
+        //            CreatedAt = transaction.CreatedAt
+        //        };
+
+        //    transactionData.Add(newData);
+        //}
+    }
+
+}

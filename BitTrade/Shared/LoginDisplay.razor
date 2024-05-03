@@ -1,0 +1,60 @@
+﻿@*@using BitTrade.Model;
+
+
+@inject UserManager<IdentityUser> userManager;
+
+<RadzenTemplateForm TItem="IdentityUser" Data=@applicationUser Submit=@OnSubmit InvalidSubmit=@OnInvalidSubmit>
+
+    <RadzenStack Gap="2rem" Class="rz-p-sm-12">
+        <RadzenLabel Style="padding-left:0%; font-size: 2rem; color: white" Text="Login" />
+        <RadzenFormField Text="Email" Variant="@variant">
+            <ChildContent>
+                <RadzenTextBox Name="Email" @bind-Value=@applicationUser.Email />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="FirstName" Text="Email is required." />
+            </Helper>
+        </RadzenFormField>
+        <RadzenFormField Text="Password" Variant="@variant">
+            <ChildContent>
+                <RadzenPassword @bind-Value=@applicationUser.PasswordHash aria-label="enter password" />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="Password" Text="Password is required." />
+            </Helper>
+        </RadzenFormField>
+        <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Login"></RadzenButton>
+    </RadzenStack>
+</RadzenTemplateForm>
+
+
+
+@code {
+
+    Variant variant = Variant.Outlined;
+    IdentityUser applicationUser = new IdentityUser();
+
+    void OnSubmit(IdentityUser user)
+    {
+
+    }
+
+    void OnInvalidSubmit(FormInvalidSubmitEventArgs args)
+    {
+
+    }
+
+}
+*@
+
+<AuthorizeView>
+    <Authorized>
+        <a href="Identity/Account/Manage">Hello, @context.User.Identity?.Name!</a>
+        <form method="post" action="Identity/Account/LogOut">
+            <button type="submit" class="nav-link btn btn-link">Log out</button>
+        </form>
+    </Authorized>
+    <NotAuthorized>
+        
+    </NotAuthorized>
+</AuthorizeView>

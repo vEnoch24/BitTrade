@@ -1,0 +1,127 @@
+﻿@using BitTrade.Dto;
+@using BitTrade.Helpers;
+@using BitTrade.Model;
+@using BitTrade.RequestPayload;
+@using Microsoft.AspNetCore.Identity;
+@using System.ComponentModel.DataAnnotations;
+@using Microsoft.AspNetCore.Mvc;
+@using BitTrade.Services;
+@using System.Linq;
+@using System.Threading.Tasks;
+@using Microsoft.JSInterop;
+
+@inject UserManager<ApplicationUser> userManager;
+@inject SignInManager<ApplicationUser> signInManager;
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager;
+@inject NotificationService NotificationService;
+@inject IAuthServices authService;
+@inject IJSRuntime jSRuntime;
+@inject HttpClient HttpClient;
+
+
+<RadzenTemplateForm TItem="RegisterDto" Data=@RegisterModel Submit=@OnSubmit >
+
+    <RadzenStack Gap="2rem" Class="rz-p-sm-12">
+        <RadzenLabel Style="padding-left:0%; font-size: 2rem; color: white" Text="Register" />
+        <RadzenFormField Text="Name" Variant="@variant">
+            <ChildContent>
+                <RadzenTextBox Name="Name" @bind-Value=@RegisterModel.Name />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="Email" Text="Email is required." />
+               
+            </Helper>
+        </RadzenFormField>
+        <RadzenFormField Text="Email" Variant="@variant">
+            <ChildContent>
+                <RadzenTextBox Name="Email" @bind-Value=@RegisterModel.Email />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="Email" Text="Email is required." />
+                <RadzenEmailValidator Component="Email" Text="Provide a valid email address" Popup=true Style="position: absolute" />
+            </Helper>
+        </RadzenFormField>
+        <RadzenFormField Text="Password" Variant="@variant">
+            <ChildContent>
+                <RadzenPassword Name="Password" @bind-Value=@RegisterModel.Password aria-label="enter password" />
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="Password" Text="Password is required." />
+            </Helper>
+        </RadzenFormField>
+        <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" IsBusy=@isBusy Text="Register"></RadzenButton>
+    </RadzenStack>
+</RadzenTemplateForm>
+
+
+
+@code {
+
+    Variant variant = Variant.Outlined;
+
+    [CascadingParameter(Name = "AuthenticationState")]
+    public State.AuthenticationState AuthenticationState { get; set; }
+
+    private RegisterDto RegisterModel { get; set; } = new();
+    private bool isBusy = false;
+    private string? errorMessage = null;
+
+    public string ReturnUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await base.OnInitializedAsync();
+    }
+
+
+    async Task OnSubmit()
+    {
+        try
+        {
+            isBusy = true;
+            var response = await HttpClient.PostAsJsonAsync<RegisterDto>("api/account/register", RegisterModel);
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                //var authResult = JsonSerializer.Deserialize<AuthResponseDto>(content, new JsonSerializerOptions
+                //    {
+                //        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                //    });
+                //AuthenticationState.LoadState(authResult);
+                //NavigationManager.NavigateTo("/chat");
+                var authResult = JsonConverter.Deserialize<AuthResponseDto>(content);
+
+                var serialized = JsonConverter.Serialize(authResult);
+                await jSRuntime.InvokeVoidAsync("window.setToStorage", State.AuthenticationState.AuthStoreKey, serialized);
+                //NavigationManager.NavigateTo("/chat");
+                AuthenticationState.LoadState(authResult);
+            }
+            else
+            {
+                string? errorContent = null;
+                try
+                {
+                    errorContent = await response.Content.ReadAsStringAsync();
+                }
+                catch
+                {
+
+                }
+                if (string.IsNullOrWhiteSpace(errorContent))
+                {
+                    errorContent = $"Error {response.StatusCode} - ${response.ReasonPhrase}";
+                }
+                isBusy = false;
+                errorMessage = errorContent;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = errorMessage, Detail = ex.Message.ToString() });
+            await jSRuntime.InvokeVoidAsync("console.log", ex);
+
+            isBusy = false; 
+        }
+    }
+
+}

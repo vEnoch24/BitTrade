@@ -1,0 +1,193 @@
+﻿@using System.ComponentModel;
+@using BitTrade.Dto;
+@using BitTrade.Helpers;
+
+@implements IDisposable
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+@inherits LayoutComponentBase
+
+<PageTitle>BitTrade</PageTitle>
+
+@*<div class="page">
+    <RadzenComponents />
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>*@
+
+@*<RadzenLayout>
+    <RadzenComponents />
+    <RadzenHeader Style="height: ; font-size: 2rem; padding:px;">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" Style="" />
+            <RadzenLabel Text="BitTrade" />
+        </RadzenStack>
+    </RadzenHeader>
+    <RadzenSidebar Responsive="false" Style="width: max-content">
+        <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false" Style="font-size: 1.2rem;">
+            <NavMenu />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+    <RadzenBody>
+        <div class="rz-p-4">
+            @Body
+        </div>
+    </RadzenBody>
+    <RadzenFooter>
+        BitTrade 2024
+    </RadzenFooter>
+</RadzenLayout>*@
+
+
+<CascadingValue Value="AuthenticationState" Name="AuthenticationState">
+
+<AuthorizeView>
+    <Authorized>
+        <RadzenLayout>
+            <RadzenComponents />
+            <RadzenHeader Style="height: ; font-size: 2rem; padding:px;">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" Style="" />
+                    <RadzenLabel Text="BitTrade" />
+                </RadzenStack>
+            </RadzenHeader>
+            <RadzenSidebar Responsive="false" Style="width: max-content">
+                <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false" Style="font-size: 1.2rem">
+                    <NavMenu/> 
+                </RadzenPanelMenu>
+            </RadzenSidebar>
+            <RadzenBody>
+                <div class="rz-p-4">
+                    @Body
+                </div>
+            </RadzenBody>
+            <RadzenFooter>
+                BitTrade 2024
+            </RadzenFooter>
+        </RadzenLayout>
+    </Authorized>
+
+    <NotAuthorized>
+        <RadzenLayout>
+            <RadzenComponents />
+            <RadzenBody>
+                <RadzenRow Style="height: 100% " Gap="0rem" >
+                    <RadzenColumn Size="6" SizeXS="6" SizeSM="6" SizeMD="6" SizeLG="6" SizeXL="6" SizeXX="6" class="custom-radial-gradient-background rz-p-5">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="15rem" JustifyContent="JustifyContent.Normal" AlignItems="AlignItems.Stretch" Style="height: 400px; padding: 50px">
+                            <RadzenCard class="rz-shadow-10" Style="background-color:rgba(0,0,0,0.2)">
+                            <RadzenLabel Style="font-size: 3rem; color:white; padding-left; 40%" Text="BitTrade" />
+                            </RadzenCard>
+                            <RadzenRow>
+                                <RadzenText TextStyle="TextStyle.H1" Style="font:100">Welcome!</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H5">Enter Your Credentials to login, or register if new.</RadzenText>
+                            </RadzenRow>
+                            <RadzenRow>
+                                <RadzenColumn>
+                                    <RadzenButton Click=@ActivateRegister Variant="Variant.Filled" ButtonStyle="ButtonStyle.Secondary" class="rz-ripple rz-shadow-8">Register</RadzenButton>
+                                    <RadzenButton Click=@ActivateLogin Variant="Variant.Filled" ButtonStyle="ButtonStyle.Secondary" class="rz-ripple rz-shadow-8">Login</RadzenButton>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            
+                        </RadzenStack>
+                        
+                    </RadzenColumn>
+                    <RadzenColumn Size="6" SizeXS="6" SizeSM="6" SizeMD="6" SizeLG="6" SizeXL="6" SizeXX="6" class="rz-background-color-info-lighter rz-color-on-info-lighter rz-p-5">
+                        @if (showLogin)
+                        {
+                            <BitTrade.Pages.Login/>
+                        }
+                        @if (showRegister)
+                        {
+                            <BitTrade.Pages.Register/>
+                        }
+                    </RadzenColumn>
+                </RadzenRow>      
+            </RadzenBody>
+        </RadzenLayout>  
+    </NotAuthorized>
+
+    <Authorizing>
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        </RadzenStack>
+    </Authorizing>
+</AuthorizeView>
+</CascadingValue>
+
+
+
+<style>
+    .custom-radial-gradient-background {
+        background: radial-gradient(circle 1200px at top left, #F5AD12, #F58F11, #F56711);
+}
+</style>
+
+
+@code {
+
+    public State.AuthenticationState AuthenticationState { get; set; } = new();
+    bool sidebarExpanded = true;
+    private bool showLogin = true;
+    private bool showRegister = false;
+
+    private void ActivateLogin()
+    {
+        showLogin = true;
+        showRegister = false;
+    }
+
+    private void ActivateRegister()
+    {
+        showLogin = false;
+        showRegister = true;
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authStateJson = await JsRuntime.InvokeAsync<string>("window.getFromStorage", State.AuthenticationState.AuthStoreKey);
+        if (!string.IsNullOrWhiteSpace(authStateJson))
+        {
+            var authState = JsonConverter.Deserialize<AuthResponseDto>(authStateJson);
+            AuthenticationState.LoadState(authState);
+
+            if (AuthenticationState.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+
+        AuthenticationState.PropertyChanged += AuthenticationStateChanged;
+    }
+
+    private void AuthenticationStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AuthenticationState.IsAuthenticated))
+        {
+            if (AuthenticationState.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthenticationState.PropertyChanged -= AuthenticationStateChanged;
+    }
+
+}

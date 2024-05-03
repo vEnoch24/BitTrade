@@ -1,0 +1,107 @@
+﻿@page "/fetchData"
+@using BitTrade.Data;
+@using BitTrade.DataAccess;
+@using BitTrade.Model;
+@using BitTrade.Services;
+
+@inject ITransactionService ts;
+@inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
+
+
+@*Style="@(allowVirtualization ? "height:400px;overflow:auto;" : "")"*@
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-p-2">
+    <RadzenCheckBox @bind-Value="@allowVirtualization" Name="allowVirtualization" />
+    <RadzenLabel Text="Allow virtualization" Component="allowVirtualization" />
+</RadzenStack>
+
+@if (transactions == null)
+{
+    <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenDataList AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:400px;overflow:auto;" : "")"
+                WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
+                Data="@transactions" TItem="TransactionModel" PageSize="9" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+        <Template Context="transaction">
+            <Animation>
+                <RadzenCard class="rz-m-xs-auto" Style="width: 100%; padding: 8px;">
+                    <RadzenRow Gap="0">
+                        <RadzenColumn Size="12" SizeXS="6" SizeLG="3" Class="rz-p-4  product-title">
+                            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" class="rz-color-secondary">@(transaction.Name)</RadzenText>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeLG="7" Class="rz-p-4">
+                                <RadzenRow Gap="0">
+                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
+                                        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0">Email</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body2">@(transaction.Email)</RadzenText>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="3" Class="rz-text-align-start rz-text-align-lg-end">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Shade="Shade.Lighter" class="price-badge" Text=@($"{String.Format(new System.Globalization.CultureInfo("en-NG"), "{0:C}", transaction.Amount)}") />
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="3" Class="rz-text-align-start rz-text-align-lg-end">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Primary" Shade="Shade.Lighter" class="price-badge" Text=@($"{String.Format(new System.Globalization.CultureInfo("en-US"), "{0}", transaction.BitcoinAmount)}") />
+                                        <RadzenText TextStyle="TextStyle.Caption" class="--rz-warning">BTC</RadzenText>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="3" Class="rz-text-align-start rz-text-align-lg-end">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Shade="Shade.Lighter" class="price-badge" Text=@(transaction.Status ? "successful" : "failed") />
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeLG="2" Class="rz-p-4">
+                                <RadzenButton Click=@(args => OnClick(transaction.Id)) Text="Delete Transaction" Style="width: 100%" />
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenCard>
+                </Animation>
+            </Template>
+        </RadzenDataList>
+}
+
+    <style>
+        .product-title {
+            min-height: 72px;
+            background-color: var(--rz-secondary-lighter);
+        }
+
+        .price-badge {
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 20px;
+            padding: 8px;
+        }
+    </style>
+
+@code {
+
+    bool allowVirtualization;
+    private string transactionStatus = "";
+    private List<TransactionModel> transactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadTransactions();
+    }
+
+    private async Task LoadTransactions()
+    {
+        transactions = await ts.GetAllTransactions();
+    }
+
+
+    private async void OnClick(string id)
+    {
+        await ts.DeleteTransaction(id);
+
+        // Reload transactions
+        await LoadTransactions();
+        StateHasChanged();
+        NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Successful", Detail = "Transaction Deleted Successfully" });
+    } 
+
+}

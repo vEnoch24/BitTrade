@@ -1,0 +1,96 @@
+﻿@using BitTrade.Model;
+@using Microsoft.AspNetCore.Mvc;
+@using System.ComponentModel.DataAnnotations;
+@using BitTrade.Services;
+
+
+@inject SignInManager<ApplicationUser> signInManager;
+@inject UserManager<ApplicationUser> userManager;
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+@inject NotificationService NotificationService
+@inject IAuthServices authService; 
+@inject IJSRuntime _jSRuntime;
+
+    <RadzenTemplateForm TItem="InputModel" Data=@Input Submit=@OnSubmit>
+        
+        <RadzenStack Gap="2rem" Class="rz-p-sm-12">
+            <RadzenLabel Style="padding-left:0%; font-size: 2rem; color: white" Text="Login" />
+            <RadzenFormField Text="Email" Variant="@variant">
+                <ChildContent>
+                    <RadzenTextBox Name="Email" @bind-Value=@Input.Email />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="Email" Text="Email is required." />
+                </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Password" Variant="@variant">
+                <ChildContent>
+                    <RadzenPassword Name="Password" @bind-Value=@Input.Password aria-label="enter password" />
+                </ChildContent>
+                <Helper>
+                    <RadzenRequiredValidator Component="Password" Text="Password is required." />
+                </Helper>
+            </RadzenFormField>
+            <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Login"></RadzenButton>
+        </RadzenStack>
+    </RadzenTemplateForm>
+
+
+
+@code {
+
+    Variant variant = Variant.Outlined;
+
+    public InputModel Input = new InputModel();
+    public string ReturnUrl;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // await base.OnInitializedAsync();
+    }
+
+    async Task OnSubmit()
+    {
+
+        //if (Input != null)
+        //{
+        //    var user = new InputModel()
+        //        {
+        //            Email = Input.Email,
+        //            Password = Input.Password
+        //        };
+        //    await authService.Login(user);
+        //}
+
+        try
+        {
+
+            var user = new InputModel()
+                {
+                    Email = Input.Email,
+                    Password = Input.Password
+                };
+            
+
+            var existingUser = await userManager.Users.AnyAsync(u => u.Email == user.Email);
+            if (!existingUser)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "User Doesnt Exist", Detail = "Please Register." });
+            }
+            else
+            {
+                await authService.Login(user);
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Success", Detail = "User Logged in" });
+            }
+
+        }
+        catch (Exception ex)
+        {   
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Failed", Detail = ex.Message.ToString() });
+            await _jSRuntime.InvokeVoidAsync("console.log", ex);
+        }
+    }
+
+}

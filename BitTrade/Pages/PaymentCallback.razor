@@ -1,0 +1,36 @@
+﻿@page "/payment-callback"
+@using BitTrade.DataAccess;
+
+@inject ITransactionService PaymentService
+@inject NavigationManager NavigationManager
+
+<h3>PaymentCallback</h3>
+
+@code {
+    [Parameter] public string Reference { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var parameters = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if(parameters.ContainsKey("reference"))
+        {
+            Reference = parameters["reference"];
+        }
+        await PaymentService.Verify(Reference);
+
+        //if (!string.IsNullOrEmpty(Reference))
+        //{
+        //    await PaymentService.Verify(Reference);
+        //    //NavigationManager.NavigateTo("/fetchData");
+        //}
+        //else
+        //{
+        //    // Handle invalid or missing reference
+        //}
+    }
+
+}
+
+<h3>Verifying Payment...</h3>
